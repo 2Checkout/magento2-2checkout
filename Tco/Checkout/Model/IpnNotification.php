@@ -150,9 +150,10 @@ class IpnNotification
     public function processNotification($params)
     {
         $this->setPaymentMethod($this->_paymentMethod);
+        $hash = $this->extractHashFromParams($params);
         //1. Validate signature
-        if (!$this->_paymentMethod->isIpnResponseValid($params)) {
-            throw new Exception(sprintf('MD5 hash mismatch for 2Checkout IPN with date: "%s".', $params['IPN_DATE']));
+        if (!$this->_paymentMethod->isIpnResponseValid($params, $hash)) {
+            throw new Exception(sprintf('Hash mismatch for 2Checkout IPN with date: "%s".', $params['IPN_DATE']));
         }
 
         //2. Check if we have Avangate REFNO & Magento2 orderid ( value hold by REFNOEXT )
@@ -206,7 +207,8 @@ class IpnNotification
             //IPN response to 2Checkout
             return $this->_ipnHelper->calculateIpnResponse(
               $params,
-              $this->_paymentMethod->getConfigData('api_secret_key')
+              $this->_paymentMethod->getConfigData('api_secret_key'),
+              $hash['algo']
             );
 
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
@@ -215,6 +217,25 @@ class IpnNotification
             throw $e;
         }
         return false;
+    }
+
+    /**
+     * @params array $params
+     * @return array    [hash, algo]
+     */
+    protected function extractHashFromParams($params):array {
+        if (!empty($params['SIGNATURE_SHA3_256'])) {
+            $receivedAlgo = 'sha3-256';
+            $receivedHash = $params['SIGNATURE_SHA3_256'];
+        } elseif (!empty($params['SIGNATURE_SHA2_256'])) {
+            $receivedAlgo = 'sha256';
+            $receivedHash = $params['SIGNATURE_SHA2_256'];
+        } else {
+            $receivedAlgo = 'md5';
+            $receivedHash = $params['HASH'];
+        }
+
+        return ['hash' => $receivedHash, 'algo' => $receivedAlgo];
     }
 
     protected function getOrder_ById($id)

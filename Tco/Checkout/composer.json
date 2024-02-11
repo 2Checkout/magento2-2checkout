@@ -2,7 +2,7 @@
   "name": "tco/checkout",
   "description": "2Checkout Magento 2 payment module",
   "type": "magento2-module",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "license": [
     "OSL-3.0",
     "AFL-3.0"

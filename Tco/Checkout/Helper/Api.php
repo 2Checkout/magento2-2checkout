@@ -25,7 +25,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $headers[] = 'Content-Type: application/json';
         $headers[] = 'Accept: application/json';
-        $headers[] = sprintf('X-Avangate-Authentication: code="%s" date="%s" hash="%s"',
+        $headers[] = sprintf('X-Avangate-Authentication: code="%s" date="%s" hash="%s" algo="sha3-256"',
             $merchantId, $dateUtcFormatted, $hash);
 
         return $headers;
@@ -71,7 +71,7 @@ class Api extends \Magento\Framework\App\Helper\AbstractHelper
     public function generateHash($vendorCode, $secret, $requestDateTime)
     {
         $string = sprintf('%s%s%s%s', strlen($vendorCode), $vendorCode, strlen($requestDateTime), $requestDateTime);
-        $hash = hash_hmac('md5', $string, $secret);
+        $hash = hash_hmac('sha3-256', $string, $secret);
 
         // the hash_hmac may fail for various reasons
         if (false === $hash) {

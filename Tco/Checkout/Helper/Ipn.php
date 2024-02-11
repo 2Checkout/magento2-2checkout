@@ -39,7 +39,7 @@ class Ipn extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_quoteRepo = $quoteRepo;
     }
 
-    public function calculateIpnResponse($ipn_params, $secret_key)
+    public function calculateIpnResponse($ipn_params, $secret_key, $algo='sha3-256')
     {
         $result_response = '';
         $ipn_params_response = [];
@@ -52,11 +52,19 @@ class Ipn extends \Magento\Framework\App\Helper\AbstractHelper
             $result_response .= $this->arrayExpand((array)$val);
         }
 
-        return sprintf(
-            '<EPAYMENT>%s|%s</EPAYMENT>',
-            $ipn_params_response['DATE'],
-            $this->hmac($secret_key, $result_response)
-        );
+        if('md5' === $algo)
+            return sprintf(
+                '<EPAYMENT>%s|%s</EPAYMENT>',
+                $ipn_params_response['DATE'],
+                $this->hmac($secret_key, $result_response, $algo)
+            );
+        else
+            return sprintf(
+                '<sig algo="%s" date="%s">%s</sig>',
+                $algo,
+                $ipn_params_response['DATE'],
+                $this->hmac($secret_key, $result_response, $algo)
+            );
     }
 
     public function arrayExpand($array)
@@ -69,11 +77,15 @@ class Ipn extends \Magento\Framework\App\Helper\AbstractHelper
         return $retval;
     }
 
-    public function hmac($key, $data)
+    public function hmac($key, $data, $algo = 'sha3-256')
     {
-        $b = 64; // byte length for md5
+        if ('sha3-256' === $algo) {
+            return hash_hmac($algo, $data, $key);
+        }
+
+        $b = 64; // byte length for hash
         if (strlen($key) > $b) {
-            $key = pack("H*", md5($key));
+            $key = pack("H*", hash($algo,$key));
         }
 
         $key = str_pad($key, $b, chr(0x00));
@@ -82,7 +94,7 @@ class Ipn extends \Magento\Framework\App\Helper\AbstractHelper
         $k_ipad = $key ^ $ipad;
         $k_opad = $key ^ $opad;
 
-        return md5($k_opad . pack("H*", md5($k_ipad . $data)));
+        return hash($algo,$k_opad . pack("H*", hash($algo,$k_ipad . $data)));
     }
 
     public function getOrderByIncrementId($incrementId, $refNo)

@@ -218,11 +218,15 @@ class Checkout extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function generateHash($key, $data)
+    public function generateHash($key, $data, $algo='sha3-256')
     {
-        $b = 64; // byte length for md5
+        if ('sha3-256' === $algo) {
+            return hash_hmac($algo, $data, $key);
+        }
+
+        $b = 64; // byte length for hash
         if (strlen($key) > $b) {
-            $key = pack("H*", md5($key));
+            $key = pack("H*", hash($algo, $key));
         }
 
         $key = str_pad($key, $b, chr(0x00));
@@ -231,7 +235,7 @@ class Checkout extends \Magento\Framework\App\Helper\AbstractHelper
         $k_ipad = $key ^ $ipad;
         $k_opad = $key ^ $opad;
 
-        return md5($k_opad . pack("H*", md5($k_ipad . $data)));
+        return hash($algo, $k_opad . pack("H*", hash($algo, $k_ipad . $data)));
     }
 
     public function arrayExpand($array)

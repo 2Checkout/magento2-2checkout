@@ -438,14 +438,17 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         return false;
     }
 
-    public function isIpnResponseValid($params)
+    /**
+     * @param array $params
+     * @param array $hash [algo, hash]
+     * @return bool
+     */
+    public function isIpnResponseValid($params, $hash)
     {
         $result = '';
-        $received_hash = $params['HASH'];
 
         foreach ($params as $key => $val) {
-
-            if ($key != "HASH") {
+            if (!in_array($key, ["HASH", "SIGNATURE_SHA2_256", "SIGNATURE_SHA3_256"])) {
                 if (is_array($val)) {
                     $result .= $this->_helper->arrayExpand($val);
                 } else {
@@ -457,8 +460,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $secret_word = $this->getConfigData('api_secret_key');
 
         if (isset($params['REFNO']) && !empty($params['REFNO'])) {
-            $calc_hash = $this->_helper->generateHash($secret_word, $result);
-            if ($received_hash === $calc_hash) {
+            $calc_hash = $this->_helper->generateHash($secret_word, $result, $hash['algo']);
+            if ($hash['hash'] === $calc_hash) {
                 return true;
             }
         }
