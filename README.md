@@ -13,7 +13,8 @@
 4. Navigate to **Dashboard** → **Integrations** → **Ipn Settings**
 5. Set the IPN URL which should be https://your-site-name.com/tco/ipn/notification/
     5a. Example IPN URL: http://example.com/tco/ipn/notification/
-6. Enable 'Triggers' in the IPN section. It’s simpler to enable all the triggers. Those who are not required will simply not be used.
+6. When adding the IPN URL make sure you check **SHA3** as Hashing algorithm
+7. Enable 'Triggers' in the IPN section. It’s simpler to enable all the triggers. Those who are not required will simply not be used.
 
 #### Magento Settings
 
