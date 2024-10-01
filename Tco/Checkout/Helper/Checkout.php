@@ -185,7 +185,7 @@ class Checkout extends \Magento\Framework\App\Helper\AbstractHelper
     public function removeArrEmptyValues($arr)
     {
         return array_filter($arr, function ($val) {
-            return '' !== trim($val);
+            return '' !== trim($val ?? '');
         });
     }
 
